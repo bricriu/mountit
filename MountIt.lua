@@ -16,7 +16,8 @@ local MountIt = {}
 -- e.g. local kiExampleVariableMax = 999
 local defaultSettings = {
 	randomMount = false,
-	defaultMount = nil
+	defaultMount = nil,
+	randomList = {}
 }
 
 -----------------------------------------------------------------------------------------------
@@ -123,7 +124,8 @@ end
 function MountIt:OnMountItOn()
 	self.wndMain:Invoke() -- show the window
 	Print("Random Setting: " .. (self.settings.randomMount == true and "true" or "false"))
-	self.wndMain:FindChild("Randomize"):SetCheck(self.settings.randomMount)
+	self.wndMain:FindChild("RandomButton"):SetCheck(self.settings.randomMount)
+	self.wndMain:FindChild("DefaultButton"):SetCheck(not self.settings.randomMount)
 	self:LoadMountList()
 end
 
@@ -175,6 +177,11 @@ function MountIt:AddMountToList(mount)
 	Print("Add Mount: " .. mountData.name .. " (" .. mountData.id .. ")")
 	
 	local mountItem = Apollo.LoadForm(self.xmlDoc, "MountListController", self.mountListForm, self)
+	local mountButton = mountItem:FindChild("ChooseMountButton")
+	
+	if (self.settings.randomMount == true and self.settings.randomList[mountData.id] ~= nil) or (self.settings.randomMount == false and self.settings.defaultMount == mountData.id) then
+		mountButton:SetCheck(true)
+	end
 	
 	local mountName = mountItem:FindChild("MountName")
 	if mountName then
@@ -186,7 +193,7 @@ function MountIt:AddMountToList(mount)
 		mountIcon:SetSprite(mountData.icon)
 	end
 	
-	mountItem:SetData(mountData)
+	mountButton:SetData(mountData)
 	
 	self.listOfMounts[mountData.id] = mountItem
 end
@@ -201,11 +208,6 @@ end
 -----------------------------------------------------------------------------------------------
 -- MountItForm Functions
 -----------------------------------------------------------------------------------------------
--- when the OK button is clicked
-function MountIt:OnOK()
-	self.wndMain:Close() -- hide the window
-end
-
 -- when the Cancel button is clicked
 function MountIt:OnCancel()
 	self.wndMain:Close() -- hide the window
@@ -213,14 +215,28 @@ end
 
 -- when random option is turned on
 function MountIt:RandomOn( wndHandler, wndControl, eMouseButton )
-	--Print("Random Turned on")
+	Print("Random Turned on")
 	self.settings.randomMount = true
+	for idx, mountItem in pairs(self.listOfMounts) do
+		if self.settings.randomList[idx] ~= nil then
+			mountItem:FindChild("ChooseMountButton"):SetCheck(true)
+		else
+			mountItem:FindChild("ChooseMountButton"):SetCheck(false)
+		end
+	end
 end
 
 -- when random option is turned off
 function MountIt:RandomOff( wndHandler, wndControl, eMouseButton )
-	--Print("Random Turned off")
+	Print("Random Turned off")
 	self.settings.randomMount = false
+	for idx, mountItem in pairs(self.listOfMounts) do
+		if idx == self.settings.defaultMount then
+			mountItem:FindChild("ChooseMountButton"):SetCheck(true)
+		else
+			mountItem:FindChild("ChooseMountButton"):SetCheck(false)
+		end
+	end
 end
 
 
@@ -232,17 +248,41 @@ end
 function MountIt:OnMount()
 	--Print("Mount Event Fired")
 	if GameLib.GetPlayerMountUnit() == nil and self.settings.randomMount == true then
-		local mountList = AbilityBook.GetAbilitiesList(Spell.CodeEnumSpellTag.Mount) or {}
+	
 		local count = 0
-		for idx, mount  in pairs(mountList) do
-			count = count + 1
+		local randomMount = nil
+		local mountId = nil
+		local mountIndex = nil
+		local mountList = nil
+	
+		-- check if table is empty
+		if next(self.settings.randomList) == nil then
+			-- Table is empty, use all mounts
+			mountList = AbilityBook.GetAbilitiesList(Spell.CodeEnumSpellTag.Mount) or {}
+			count = 0
+			for idx, mount  in pairs(mountList) do
+				count = count + 1
+			end
+			mountIndex = math.random(count)
+			randomMount = mountList[mountIndex]
+			mountId = randomMount.tTiers[1].splObject:GetId()
+		else
+			-- Table is not empty, use the list
+			mountList = self.settings.randomList
+			local countList = {}
+			for idx, mount in pairs(mountList) do
+				Print(idx)
+				countList[count] = idx
+				count = count + 1
+			end
+			
+			mountIndex = math.random(count) - 1
+			randomMount = mountList[countList[mountIndex]]
+			mountId = randomMount.id
 		end
-		local mountIndex = math.random(count)
-		--Print(count .. " mounts available")
-		Print("choosing random mount #: " .. mountIndex)
-		local randomMount = mountList[mountIndex]
-		local mountId = randomMount.tTiers[1].splObject:GetId()
-		Print(randomMount.strName .. " (" .. mountId .. ")")
+		
+		Print("choosing random mount #: " .. mountIndex .. " of " .. count)
+		
 		Apollo.GetAddon("ActionBarFrame").nSelectedMount = mountId
 		Apollo.GetAddon("ActionBarFrame"):RedrawMounts()
 	end
@@ -260,7 +300,30 @@ function MountIt:OnSelectMount( wndHandler, wndControl, eMouseButton, nLastRelat
 	local chosenMount = wndControl:GetData()
 	Print("Clicked on Mount: " .. chosenMount.name .. " (" .. chosenMount.id .. ")")
 	
-	self:SetDefaultMount(chosenMount.id)
+	if self.settings.randomMount == true then
+		-- If Random, then do a thing
+		if wndControl:IsChecked() then
+			--Add to random list
+			Print("Add to random list: " .. chosenMount.name)
+			self.settings.randomList[chosenMount.id] =  chosenMount
+		else
+			-- Remove from random list
+			Print("Remove random list: " .. chosenMount.name)
+			self.settings.randomList[chosenMount.id] = nil
+		end
+--		for idx, mount in pairs(self.settings.randomList) do
+--			Print(mount.name .. " (" .. idx .. ")")
+--		end
+	else
+		-- If Default, then choose the default mount and uncheck the other ones
+		for idx, mountItem in pairs(self.listOfMounts) do
+			if idx ~= chosenMount.id then
+				mountItem:FindChild("ChooseMountButton"):SetCheck(false)
+			end
+		end
+		
+		self:SetDefaultMount(chosenMount.id)
+	end
 end
 
 -----------------------------------------------------------------------------------------------
