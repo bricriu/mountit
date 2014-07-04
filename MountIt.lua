@@ -103,13 +103,11 @@ end
 -- MountIt Save/Load
 -----------------------------------------------------------------------------------------------
 function MountIt:OnSave(eLevel)
-	Print("Save")
 	if eLevel ~= GameLib.CodeEnumAddonSaveLevel.Account then return nil end
 	return self.settings
 end
 
 function MountIt:OnRestore(eLevel, tSaveData)
-	Print("Restore")
 	if tSaveData then
 		self.settings = tSaveData
 	end
@@ -123,14 +121,12 @@ end
 -- on SlashCommand "/mountit"
 function MountIt:OnMountItOn()
 	self.wndMain:Invoke() -- show the window
-	Print("Random Setting: " .. (self.settings.randomMount == true and "true" or "false"))
 	self.wndMain:FindChild("RandomButton"):SetCheck(self.settings.randomMount)
 	self.wndMain:FindChild("DefaultButton"):SetCheck(not self.settings.randomMount)
 	self:LoadMountList()
 end
 
 function MountIt:OnToggleMountIt()
-	Print("toggle mount it")
 	if self.wndMain:IsVisible() then
 		self.wndMain:Close()
 	else
@@ -145,8 +141,6 @@ function MountIt:OnConfigure()
 end
 
 function MountIt:LoadMountList()
-	Print("Load Mount List")
-	
 	self:EmptyMountList()
 	
 	local mountList = AbilityBook.GetAbilitiesList(Spell.CodeEnumSpellTag.Mount) or {}
@@ -159,7 +153,6 @@ function MountIt:LoadMountList()
 end
 
 function MountIt:EmptyMountList()
-	Print("Empty Mount List")
 	for idx, item in pairs(self.listOfMounts) do
 		item:Destroy()
 	end
@@ -174,7 +167,6 @@ function MountIt:AddMountToList(mount)
 		icon = mountObject:GetIcon(),
 		name = mount.strName
 	}
-	Print("Add Mount: " .. mountData.name .. " (" .. mountData.id .. ")")
 	
 	local mountItem = Apollo.LoadForm(self.xmlDoc, "MountListController", self.mountListForm, self)
 	local mountButton = mountItem:FindChild("ChooseMountButton")
@@ -215,7 +207,6 @@ end
 
 -- when random option is turned on
 function MountIt:RandomOn( wndHandler, wndControl, eMouseButton )
-	Print("Random Turned on")
 	self.settings.randomMount = true
 	for idx, mountItem in pairs(self.listOfMounts) do
 		if self.settings.randomList[idx] ~= nil then
@@ -228,7 +219,6 @@ end
 
 -- when random option is turned off
 function MountIt:RandomOff( wndHandler, wndControl, eMouseButton )
-	Print("Random Turned off")
 	self.settings.randomMount = false
 	for idx, mountItem in pairs(self.listOfMounts) do
 		if idx == self.settings.defaultMount then
@@ -246,7 +236,6 @@ end
 -- detect mount events. if random option is chosen, change to a random mount when dismounting
 -- TODO: register and deregister event handling when option is changed to save on memory usage
 function MountIt:OnMount()
-	--Print("Mount Event Fired")
 	if GameLib.GetPlayerMountUnit() == nil and self.settings.randomMount == true then
 	
 		local count = 0
@@ -271,7 +260,6 @@ function MountIt:OnMount()
 			mountList = self.settings.randomList
 			local countList = {}
 			for idx, mount in pairs(mountList) do
-				Print(idx)
 				countList[count] = idx
 				count = count + 1
 			end
@@ -280,8 +268,6 @@ function MountIt:OnMount()
 			randomMount = mountList[countList[mountIndex]]
 			mountId = randomMount.id
 		end
-		
-		Print("choosing random mount #: " .. mountIndex .. " of " .. count)
 		
 		Apollo.GetAddon("ActionBarFrame").nSelectedMount = mountId
 		Apollo.GetAddon("ActionBarFrame"):RedrawMounts()
@@ -298,22 +284,16 @@ function MountIt:OnSelectMount( wndHandler, wndControl, eMouseButton, nLastRelat
 	if wndHandler ~= wndControl then return	end
 	
 	local chosenMount = wndControl:GetData()
-	Print("Clicked on Mount: " .. chosenMount.name .. " (" .. chosenMount.id .. ")")
 	
 	if self.settings.randomMount == true then
 		-- If Random, then do a thing
 		if wndControl:IsChecked() then
 			--Add to random list
-			Print("Add to random list: " .. chosenMount.name)
 			self.settings.randomList[chosenMount.id] =  chosenMount
 		else
 			-- Remove from random list
-			Print("Remove random list: " .. chosenMount.name)
 			self.settings.randomList[chosenMount.id] = nil
 		end
---		for idx, mount in pairs(self.settings.randomList) do
---			Print(mount.name .. " (" .. idx .. ")")
---		end
 	else
 		-- If Default, then choose the default mount and uncheck the other ones
 		for idx, mountItem in pairs(self.listOfMounts) do
