@@ -125,6 +125,7 @@ function MountIt:OnMountItOn()
 	self.wndMain:Invoke() -- show the window
 	self.wndMain:FindChild("RandomButton"):SetCheck(self.settings.randomMount)
 	self.wndMain:FindChild("DefaultButton"):SetCheck(not self.settings.randomMount)
+	self.wndMain:FindChild("DismountButton"):SetCheck(self.settings.craftingDismount)
 	self:LoadMountList()
 end
 
