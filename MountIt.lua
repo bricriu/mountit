@@ -195,8 +195,7 @@ end
 
 function MountIt:SetDefaultMount(mountId)
 	self.settings.defaultMount = mountId
-	Apollo.GetAddon("ActionBarFrame").nSelectedMount = mountId
-	Apollo.GetAddon("ActionBarFrame"):RedrawMounts()
+    GameLib.SetShortcutMount(mountId)
 end
 
 
@@ -230,6 +229,7 @@ function MountIt:RandomOff( wndHandler, wndControl, eMouseButton )
 			mountItem:FindChild("ChooseMountButton"):SetCheck(false)
 		end
 	end
+    GameLib.SetShortcutMount(self.settings.defaultMount)
 end
 
 
@@ -280,8 +280,7 @@ function MountIt:OnMount()
 			mountId = randomMount.id
 		end
 		
-		Apollo.GetAddon("ActionBarFrame").nSelectedMount = mountId
-		Apollo.GetAddon("ActionBarFrame"):RedrawMounts()
+        GameLib.SetShortcutMount(mountId)
 	end
 end
 
