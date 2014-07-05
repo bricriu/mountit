@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<Addon Author="bricriu" APIVersion="8" Name="MountIt" Description="Allows you to choose default mount and save it, or choose a random mount every time.">
-    <Script Name="MountIt.lua"/>
-    <Form Name="MountIt.xml"/>
-</Addon>
