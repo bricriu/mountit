@@ -17,6 +17,7 @@ local MountIt = {}
 local defaultSettings = {
 	randomMount = false,
 	defaultMount = nil,
+	craftingDismount = true,
 	randomList = {}
 }
 
@@ -57,6 +58,7 @@ function MountIt:OnLoad()
 	end
 	self.listOfMounts = {}
 	Apollo.RegisterEventHandler("Mount", "OnMount", self)
+	Apollo.RegisterEventHandler("InvokeCraftingWindow", "OnCraft", self)
 end
 
 -----------------------------------------------------------------------------------------------
@@ -230,6 +232,14 @@ function MountIt:RandomOff( wndHandler, wndControl, eMouseButton )
 end
 
 
+function MountIt:DismountOn( wndHandler, wndControl, eMouseButton )
+	self.settings.craftingDismount = true
+end
+
+function MountIt:DismountOff( wndHandler, wndControl, eMouseButton )
+	self.settings.craftingDismount = false
+end
+
 -----------------------------------------------------------------------------------------------
 -- Event Functions
 -----------------------------------------------------------------------------------------------
@@ -271,6 +281,13 @@ function MountIt:OnMount()
 		
 		Apollo.GetAddon("ActionBarFrame").nSelectedMount = mountId
 		Apollo.GetAddon("ActionBarFrame"):RedrawMounts()
+	end
+end
+
+-- Detect Crafting event and dismount if the option is enabled
+function MountIt:OnCraft()
+	if self.settings.craftingDismount == true then
+		GameLib:Disembark()
 	end
 end
 
