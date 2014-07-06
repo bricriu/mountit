@@ -59,6 +59,7 @@ function MountIt:OnLoad()
 	self.listOfMounts = {}
 	Apollo.RegisterEventHandler("Mount", "OnMount", self)
 	Apollo.RegisterEventHandler("InvokeCraftingWindow", "OnCraft", self)
+	Apollo.RegisterEventHandler("TradeskillEngravingStationOpen", "OnEngrave", self)
 end
 
 -----------------------------------------------------------------------------------------------
@@ -286,6 +287,13 @@ end
 
 -- Detect Crafting event and dismount if the option is enabled
 function MountIt:OnCraft()
+	if self.settings.craftingDismount == true then
+		GameLib:Disembark()
+	end
+end
+
+function MountIt:OnEngrave()
+	Print("Use Engraving Station")
 	if self.settings.craftingDismount == true then
 		GameLib:Disembark()
 	end

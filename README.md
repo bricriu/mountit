@@ -1,4 +1,4 @@
-mountit
+MountIt
 =======
 
 MountIt - A WildStar addon for mount management
